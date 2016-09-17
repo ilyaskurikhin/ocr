@@ -6,7 +6,12 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -17,6 +22,12 @@ public class MainActivity extends AppCompatActivity {
 
     Button loginButton;
     Button registerButton;
+
+    EditText userNameET;
+    EditText passwordET;
+
+    TextView errorNameET;
+    TextView errorPasswordET;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +51,13 @@ public class MainActivity extends AppCompatActivity {
         loginButton = (Button) findViewById(R.id.loginButton);
         registerButton = (Button) findViewById(R.id.registerButton);
 
+        userNameET = (EditText) findViewById(R.id.usernameEditText);
+        passwordET = (EditText) findViewById(R.id.passwordEditText);
+
+        errorNameET = (TextView) findViewById(R.id.errorEmailText);
+        errorPasswordET = (TextView) findViewById(R.id.errorPasswordText);
+
+
         loginButton.setOnClickListener(new View.OnClickListener() {
 
             @Override
@@ -57,11 +75,45 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    protected void login() {
+    @Override
+    public void onStart() {
+        super.onStart();
+        mAuth.addAuthStateListener(mAuthListener);
+    }
 
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (mAuthListener != null) {
+            mAuth.removeAuthStateListener(mAuthListener);
+        }
+    }
+
+    protected void login() {
     }
 
     protected void register() {
+        mAuth.createUserWithEmailAndPassword(userNameET.getText().toString(), passwordET.getText().toString())
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
 
+                        // If sign in fails, display a message to the user. If sign in succeeds
+                        // the auth state listener will be notified and logic to handle the
+                        // signed in user can be handled in the listener.
+                        if (!task.isSuccessful()) {
+                            errorNameET.setText("Can't register");
+                        }
+                        else {
+                            goToNextScreen();
+                        }
+
+                        // ...
+                    }
+                });
+    }
+
+    protected void goToNextScreen() {
+        System.out.println("TODO");
     }
 }
