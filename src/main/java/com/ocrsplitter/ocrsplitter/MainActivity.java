@@ -17,20 +17,18 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import org.json.JSONObject;
+
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonValue;
 
-import Math.abs;
-
 public class MainActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
-    private ArrayList<ReceiptItem> ReceiptList;
-    private String[] ITEMS = new String[]
 
     Button loginButton;
     Button registerButton;
@@ -154,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    protected ArrayList extractItems(String s) {
+    protected ArrayList<JsonObject> extractItems(String s) {
 
         JsonReader reader = Json.createReader(new StringReader(s));
 
@@ -162,22 +160,22 @@ public class MainActivity extends AppCompatActivity {
 
         reader.close();
 
-        JsonArray text_data = data.getJsonArray("textAnnotation");
+        JsonArray<JsonObject> text_data = data.getJsonArray("textAnnotation");
 
-        ArrayList words = [];
+        ArrayList<JsonObject> words = new ArrayList();
 
-        for (JsonObject word : text_data) {
-            words.add(word);
+        for (int i=0; i < text_data.length(); ++i) {
+            words.add(text_data.get(i));
         }
 
         return words;
     }
 
-    protected ArrayList selectLines(ArrayList<JsonObject> words) {
-        ArrayList lines;
-        ArrayList current_line;
+    protected ArrayList<ArrayList<JsonObject>> selectLines(ArrayList<JsonObject> words) {
+        ArrayList<ArrayList<JsonObject>> lines = new ArrayList();
+        ArrayList<JsonObject> current_line = new ArrayList();
 
-        ArrayList words_done;
+        ArrayList<JsonObject> words_done;
 
         int current_line_y = 0;
 
@@ -193,8 +191,8 @@ public class MainActivity extends AppCompatActivity {
             if (!exclude) {
                 exclude = false;
 
-                current_line.add(primary_word)
-                words_done.add(primary_word)
+                current_line.add(primary_word);
+                words_done.add(primary_word);
 
                 JsonArray vertexes = word.getJsonObject("boudingPoly").getJsonArray("vertices");
 
@@ -218,22 +216,20 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
                 lines.add(current_line);
-                current_line = [];
+                current_line.clear();
             }
         }
         return lines;
     }
 
-    public void getTextData(String filename)
+    public void getTextData(String filename) {
+
+    }
 
 
     protected void goToNextScreen() {
         System.out.println("Next Screen");
         Intent goToNextScreen = new Intent(getApplicationContext(), HomeActivity.class);
         startActivity(goToNextScreen);
-    }
-
-    public void createReceipt(JSONObject obj) {
-        if obj.getJSONArray("textAnnotations").get
     }
 }

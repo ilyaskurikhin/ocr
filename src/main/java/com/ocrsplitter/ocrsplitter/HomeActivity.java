@@ -16,15 +16,25 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+
 
 // Much taken from https://developer.android.com/training/camera/photobasics.html#TaskPhotoView
 public class HomeActivity extends AppCompatActivity {
@@ -33,6 +43,7 @@ public class HomeActivity extends AppCompatActivity {
     static final int REQUEST_TAKE_PHOTO = 1;
 
     private String pictureSaveLoc;
+    private String pictureLocation;
 
     Button cameraButton;
 
@@ -68,6 +79,7 @@ public class HomeActivity extends AppCompatActivity {
                         photoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
+                uploadFile();
             }
         }
     }
@@ -86,8 +98,40 @@ public class HomeActivity extends AppCompatActivity {
 
         // Save a file: path for use with ACTION_VIEW intents
         pictureSaveLoc = "file:" + image.getAbsolutePath();
+        pictureLocation = image.getAbsolutePath();
         return image;
     }
+
+
+    private void uploadFile() {
+        FirebaseStorage storage = FirebaseStorage.getInstance();
+        StorageReference storageRef = storage.getReferenceFromUrl("gs://hackmit-receipts");
+
+        StorageReference mountainsRef = storageRef.child(pictureLocation);
+
+        InputStream stream = null;
+        try {
+            stream = new FileInputStream(new File(pictureLocation));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        Task uploadTask = mountainsRef.putStream(stream);
+        uploadTask.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                // Handle unsuccessful uploads
+            }
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
+                Uri downloadUrl = taskSnapshot.getDownloadUrl();
+            }
+        });
+    }
+
+
 
 
 }
