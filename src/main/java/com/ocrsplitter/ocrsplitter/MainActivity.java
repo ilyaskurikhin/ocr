@@ -1,5 +1,7 @@
 package com.ocrsplitter.ocrsplitter;
 
+import android.content.Intent;
+import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -57,6 +59,11 @@ public class MainActivity extends AppCompatActivity {
         errorNameET = (TextView) findViewById(R.id.errorEmailText);
         errorPasswordET = (TextView) findViewById(R.id.errorPasswordText);
 
+        errorNameET.setText("");
+        errorNameET.setTextColor(Color.RED);
+        errorPasswordET.setText("");
+        errorPasswordET.setTextColor(Color.RED);
+
 
         loginButton.setOnClickListener(new View.OnClickListener() {
 
@@ -90,19 +97,43 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected void login() {
+        errorNameET.setText("");
+
+        mAuth.signInWithEmailAndPassword(userNameET.getText().toString(), passwordET.getText().toString())
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+
+                        if (!task.isSuccessful()) {
+                            errorNameET.setText("Invalid username or password");
+                            System.out.println(task.getException());
+                        }
+                        else {
+                            goToNextScreen();
+                        }
+
+                        // ...
+                    }
+                });
     }
 
     protected void register() {
+        errorNameET.setText("");
+
+        if (passwordET.getText().toString().length() < 6) {
+            errorNameET.setText("Password is too short");
+            return;
+        }
+
         mAuth.createUserWithEmailAndPassword(userNameET.getText().toString(), passwordET.getText().toString())
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
 
-                        // If sign in fails, display a message to the user. If sign in succeeds
-                        // the auth state listener will be notified and logic to handle the
-                        // signed in user can be handled in the listener.
+                        // If sign in fails, display a message to the user.
                         if (!task.isSuccessful()) {
                             errorNameET.setText("Can't register");
+                            System.out.println(task.getException());
                         }
                         else {
                             goToNextScreen();
@@ -114,6 +145,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected void goToNextScreen() {
-        System.out.println("TODO");
+        System.out.println("Next Screen");
+        Intent goToNextScreen = new Intent(getApplicationContext(), HomeActivity.class);
+        startActivity(goToNextScreen);
     }
 }
