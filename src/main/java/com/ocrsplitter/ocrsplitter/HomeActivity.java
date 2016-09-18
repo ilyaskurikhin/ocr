@@ -84,6 +84,7 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
+
     private File createImageFile() throws IOException {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
@@ -102,36 +103,13 @@ public class HomeActivity extends AppCompatActivity {
         return image;
     }
 
-
-    private void uploadFile() {
-        FirebaseStorage storage = FirebaseStorage.getInstance();
-        StorageReference storageRef = storage.getReferenceFromUrl("gs://hackmit-receipts");
-
-        StorageReference mountainsRef = storageRef.child(pictureLocation);
-
-        InputStream stream = null;
-        try {
-            stream = new FileInputStream(new File(pictureLocation));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_TAKE_PHOTO) {
+            Intent goToNextScreen = new Intent(getApplicationContext(), ChargeActivity.class);
+            startActivity(goToNextScreen);
         }
-
-        Task uploadTask = mountainsRef.putStream(stream);
-        uploadTask.addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-                // Handle unsuccessful uploads
-            }
-        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
-                Uri downloadUrl = taskSnapshot.getDownloadUrl();
-            }
-        });
     }
-
-
-
-
 }

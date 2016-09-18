@@ -1,7 +1,9 @@
 package com.ocrsplitter.ocrsplitter;
 
+import android.annotation.TargetApi;
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -10,7 +12,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.Manifest;
 
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -18,6 +24,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import org.json.JSONObject;
+
+import java.io.StringReader;
+import java.util.ArrayList;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -38,7 +47,13 @@ public class MainActivity extends AppCompatActivity {
 
     TextView errorNameET;
     TextView errorPasswordET;
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    private GoogleApiClient client;
 
+    @TargetApi(24)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,8 +66,7 @@ public class MainActivity extends AppCompatActivity {
                 FirebaseUser user = firebaseAuth.getCurrentUser();
                 if (user != null) {
                     // User is signed in
-                }
-                else {
+                } else {
                     // User is signed out
                 }
             }
@@ -88,20 +102,57 @@ public class MainActivity extends AppCompatActivity {
                 register();
             }
         });
+
+        requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 5);
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
     @Override
     public void onStart() {
         super.onStart();
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client.connect();
         mAuth.addAuthStateListener(mAuthListener);
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        Action viewAction = Action.newAction(
+                Action.TYPE_VIEW, // TODO: choose an action type.
+                "Main Page", // TODO: Define a title for the content shown.
+                // TODO: If you have web page content that matches this app activity's content,
+                // make sure this auto-generated web page URL is correct.
+                // Otherwise, set the URL to null.
+                Uri.parse("http://host/path"),
+                // TODO: Make sure this auto-generated app URL is correct.
+                Uri.parse("android-app://com.ocrsplitter.ocrsplitter/http/host/path")
+        );
+        AppIndex.AppIndexApi.start(client, viewAction);
     }
 
     @Override
     public void onStop() {
         super.onStop();
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        Action viewAction = Action.newAction(
+                Action.TYPE_VIEW, // TODO: choose an action type.
+                "Main Page", // TODO: Define a title for the content shown.
+                // TODO: If you have web page content that matches this app activity's content,
+                // make sure this auto-generated web page URL is correct.
+                // Otherwise, set the URL to null.
+                Uri.parse("http://host/path"),
+                // TODO: Make sure this auto-generated app URL is correct.
+                Uri.parse("android-app://com.ocrsplitter.ocrsplitter/http/host/path")
+        );
+        AppIndex.AppIndexApi.end(client, viewAction);
         if (mAuthListener != null) {
             mAuth.removeAuthStateListener(mAuthListener);
         }
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client.disconnect();
     }
 
     protected void login() {
@@ -115,8 +166,7 @@ public class MainActivity extends AppCompatActivity {
                         if (!task.isSuccessful()) {
                             errorNameET.setText("Invalid username or password");
                             System.out.println(task.getException());
-                        }
-                        else {
+                        } else {
                             goToNextScreen();
                         }
 
@@ -142,8 +192,7 @@ public class MainActivity extends AppCompatActivity {
                         if (!task.isSuccessful()) {
                             errorNameET.setText("Can't register");
                             System.out.println(task.getException());
-                        }
-                        else {
+                        } else {
                             goToNextScreen();
                         }
 
@@ -221,6 +270,7 @@ public class MainActivity extends AppCompatActivity {
         }
         return lines;
     }
+     */
 
     public void getTextData(String filename) {
 
@@ -231,5 +281,9 @@ public class MainActivity extends AppCompatActivity {
         System.out.println("Next Screen");
         Intent goToNextScreen = new Intent(getApplicationContext(), HomeActivity.class);
         startActivity(goToNextScreen);
+    }
+
+    public void createReceipt(JSONObject obj) {
+        //if obj.getJSONArray("textAnnotations").get
     }
 }
