@@ -201,6 +201,7 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
+    /**
     protected ArrayList<JsonObject> extractItems(String s) {
 
         JsonReader reader = Json.createReader(new StringReader(s));
