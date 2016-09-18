@@ -26,6 +26,7 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
     private ArrayList<ReceiptItem> ReceiptList;
+    private String[] ITEMS = new String[]
 
     Button loginButton;
     Button registerButton;
