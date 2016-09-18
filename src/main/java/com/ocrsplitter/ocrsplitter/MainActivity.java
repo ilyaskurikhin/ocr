@@ -15,6 +15,12 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.JsonValue;
+
 public class MainActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
@@ -112,6 +118,26 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
     }
+
+    protected void extractItems(String s) {
+
+        JsonReader reader = Json.createReader(new StringReader(s));
+
+        JsonObject data = reader.readObject();
+
+        reader.close();
+
+        JsonArray text_data = data.getJsonArray("textAnnotation");
+
+        ArrayList words = [];
+
+        for (JsonObject word : text_data) {
+            words.add(word);
+        }
+
+        return words;
+    }
+
 
     protected void goToNextScreen() {
         System.out.println("TODO");
