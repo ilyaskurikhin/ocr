@@ -104,6 +104,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 5);
+        requestPermissions(new String[]{Manifest.permission.SEND_SMS}, 6);
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();

@@ -11,6 +11,7 @@ public class ReceiptItem {
     private boolean paid = false;
     private String ownersName;
     private String phoneNumber;
+    private String ownersEmail;
 
     public ReceiptItem(String name, double price) {
         this.name = name;

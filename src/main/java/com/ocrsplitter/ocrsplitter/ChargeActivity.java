@@ -13,6 +13,7 @@ import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
+import android.telephony.SmsManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -73,6 +74,37 @@ public class ChargeActivity extends AppCompatActivity {
         cancelButton = (Button) findViewById(R.id.cancelButton);
         okButton = (Button) findViewById(R.id.okButton);
 
+        okButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ArrayList<String> phones = new ArrayList<String>();
+                ArrayList<String> names = new ArrayList<String>();
+                ArrayList<Double> costs = new ArrayList<Double>();
+                ArrayList<ArrayList<String>> userItems = new ArrayList<ArrayList<String>>();
+
+                // Go through and add up the receipts for each user
+                for (ReceiptItem item : items) {
+                    if (! item.isPaid()) {
+                        int index = phones.indexOf(item.getPhoneNumber());
+                        if (index < 0) {
+                            phones.add(item.getPhoneNumber());
+                            names.add(item.getOwnersName());
+                            costs.add(item.getPrice());
+
+                            userItems.add(new ArrayList<String>());
+                            userItems.get(userItems.size() - 1).add(item.getName());
+                        }
+                        else {
+                            costs.set(index, costs.get(index) + item.getPrice());
+                            userItems.get(index).add(item.getName());
+                        }
+                    }
+                }
+
+                chargeUsers(phones, names, costs, userItems);
+            }
+        });
+
         items = getReceiptItems("Dur dur dur");
 
         for (ReceiptItem item : items) {
@@ -119,6 +151,7 @@ public class ChargeActivity extends AppCompatActivity {
                         phones.moveToFirst();
                         String contactNumber = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
                         String given = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+                        String email = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DATA));
                         phones.close();
 
                         String name = given;
@@ -164,6 +197,31 @@ public class ChargeActivity extends AppCompatActivity {
             return true;
         }
     };
+
+    private void chargeUsers(ArrayList<String> phones, ArrayList<String> names, ArrayList<Double>  costs, ArrayList<ArrayList<String>> userItems) {
+        for (int i = 0; i < phones.size(); i++) {
+            String description = "";
+            for (int k = 0; k < userItems.get(i).size(); k++) {
+                description += userItems.get(i).get(k);
+                if (k < userItems.size() - 1) {
+                    description += ", ";
+                }
+                else {
+                    description += ".";
+                }
+            }
+            chargeUser(phones.get(i), names.get(i), costs.get(i), description);
+        }
+    }
+
+    private void chargeUser(String phone, String name, Double cost, String note) {
+        System.out.println("Charging " + phone + " .Name " + name + " .Cost " + cost + " .Note " + note);
+        SmsManager smsManager = SmsManager.getDefault();
+        smsManager.sendTextMessage(phone, null, "Hey " + name + ", you owe " + cost + " from these items: " + note, null, null);
+
+        Intent goToNextScreen = new Intent(getApplicationContext(), HomeActivity.class);
+        startActivity(goToNextScreen);
+    }
 
     //////////////////////////////////////////////////////////////////////////
 
