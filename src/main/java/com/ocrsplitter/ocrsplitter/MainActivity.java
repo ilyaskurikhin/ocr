@@ -201,8 +201,8 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    /**
-    protected ArrayList<JsonObject> extractItems(String s) {
+
+    protected ArrayList<JsonValue> extractItems(String s) {
 
         JsonReader reader = Json.createReader(new StringReader(s));
 
@@ -212,27 +212,27 @@ public class MainActivity extends AppCompatActivity {
 
         JsonArray text_data = data.getJsonArray("textAnnotation");
 
-        ArrayList<JsonObject> words = new ArrayList();
+        ArrayList<JsonValue> words = new ArrayList();
 
-        for (int i=0; i < text_data.length(); ++i) {
+        for (int i=0; i < text_data.size(); ++i) {
             words.add(text_data.get(i));
         }
 
         return words;
     }
 
-    protected ArrayList<ArrayList<JsonObject>> selectLines(ArrayList<JsonObject> words) {
-        ArrayList<ArrayList<JsonObject>> lines = new ArrayList();
-        ArrayList<JsonObject> current_line = new ArrayList();
+    protected ArrayList<ArrayList<JsonValue>> selectLines(ArrayList<JsonValue> words) {
+        ArrayList<ArrayList<JsonValue>> lines = new ArrayList();
+        ArrayList<JsonValue> current_line = new ArrayList();
 
-        ArrayList<JsonObject> words_done;
+        ArrayList<JsonValue> words_done = new ArrayList();
 
         int current_line_y = 0;
 
-        for (JsonObject primary_word : words) {
+        for (JsonValue primary_word : words) {
 
             boolean exclude = false;
-            for (JsonObject check_word : words_done) {
+            for (JsonValue check_word : words_done) {
                 if (primary_word == check_word) {
                     exclude = true;
                     break;
@@ -244,13 +244,13 @@ public class MainActivity extends AppCompatActivity {
                 current_line.add(primary_word);
                 words_done.add(primary_word);
 
-                JsonArray vertexes = word.getJsonObject("boudingPoly").getJsonArray("vertices");
+                JsonArray vertexes = ((JsonObject)primary_word).getJsonObject("boudingPoly").getJsonArray("vertices");
 
-                current_line_y = vertexes.get(0).getInt("y");
-                int current_line_height = vertexes.get(0).getInt("y") - vertexes.get(2).getInt("y");
+                current_line_y = vertexes.getJsonObject(0).getInt("y");
+                int current_line_height = vertexes.getJsonObject(0).getInt("y") - vertexes.getJsonObject(2).getInt("y");
 
-                for (JsonObject secondary_word : words) {
-                    for (JsonObject check_word : words_done) {
+                for (JsonValue secondary_word : words) {
+                    for (JsonValue check_word : words_done) {
                         if (secondary_word == check_word) {
                             exclude = true;
                         }
@@ -258,7 +258,7 @@ public class MainActivity extends AppCompatActivity {
 
                     if (!exclude) {
                         exclude = false;
-                        current_word_y = secondary_word.getJsonObject("boundingPoly").getJsonArray("vertices").get(0).getInt("y");
+                        int current_word_y = ((JsonObject)secondary_word).getJsonObject("boundingPoly").getJsonArray("vertices").getJsonObject(0).getInt("y");
                         if (Math.abs(current_word_y - current_line_y) <= current_line_height) {
                             current_line.add(secondary_word);
                             words_done.add(secondary_word);
@@ -273,16 +273,36 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void getTextData(String s) {
-        ArrayList<JsonObject> jtext = selectLines(extractItems(s));
+    public ArrayList<ArrayList<String>> getTextData(String s) {
+        ArrayList<ArrayList<JsonValue>> jtext = selectLines(extractItems(s));
         String [] money_vals = {".0", ".1", ".2", ".3", ".4", ".5", ".6", ".7", ".8", ".9"};
-        String stext [][] = new String[jtext.size()][jtext[0].size()];
+        ArrayList<ArrayList<String>> stext = new ArrayList();
 
-        for(ArrayList ar_list : jtext) {
-            for(JsonObject js_obj : ar_list) {
 
+        ArrayList<ArrayList<String>> items = new ArrayList();
+
+        for(ArrayList<JsonValue> ar_list1 : jtext){
+            ArrayList<String> tempitems = new ArrayList();
+            for(JsonValue text_object : ar_list1) {
+                String text = ((JsonObject)text_object).getString("description");
+                    tempitems.add(text);
             }
+            stext.add(tempitems);
         }
+
+        //Now check to see if they have dollar values
+        for(ArrayList<String> slist: stext){
+            for(String component: slist){
+                for(String m_vals: money_vals){
+                    if (component.contains(m_vals)){
+                        items.add(slist);
+                    }
+                }
+            }
+
+        }
+
+        return items;
     }
 
 
