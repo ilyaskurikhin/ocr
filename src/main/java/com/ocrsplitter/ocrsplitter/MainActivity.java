@@ -17,10 +17,15 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+
 public class MainActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
+    private ArrayList<ReceiptItem> ReceiptList;
 
     Button loginButton;
     Button registerButton;
@@ -148,5 +153,9 @@ public class MainActivity extends AppCompatActivity {
         System.out.println("Next Screen");
         Intent goToNextScreen = new Intent(getApplicationContext(), HomeActivity.class);
         startActivity(goToNextScreen);
+    }
+
+    public void createReceipt(JSONObject obj) {
+        if obj.getJSONArray("textAnnotations").get
     }
 }

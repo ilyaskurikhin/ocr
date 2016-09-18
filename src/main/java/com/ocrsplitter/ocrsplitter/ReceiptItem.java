@@ -12,4 +12,12 @@ public class ReceiptItem {
         this.name = name;
         this.price = price;
     }
+
+    public void getName(){
+        return name;
+    }
+
+    public void getPrice(){
+        return price;
+    }
 }
