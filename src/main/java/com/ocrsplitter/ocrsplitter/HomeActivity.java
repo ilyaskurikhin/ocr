@@ -42,8 +42,8 @@ public class HomeActivity extends AppCompatActivity {
     static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int REQUEST_TAKE_PHOTO = 1;
 
-    private String pictureSaveLoc;
-    private String pictureLocation;
+    public static String pictureSaveLoc;
+    public static String pictureName;
 
     Button cameraButton;
 
@@ -88,6 +88,7 @@ public class HomeActivity extends AppCompatActivity {
     private File createImageFile() throws IOException {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        pictureName = "JPEG_" + timeStamp + "_" + ".jpg";
         String imageFileName = "JPEG_" + timeStamp + "_";
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         System.out.println(storageDir);
@@ -98,8 +99,8 @@ public class HomeActivity extends AppCompatActivity {
         );
 
         // Save a file: path for use with ACTION_VIEW intents
-        pictureSaveLoc = "file:" + image.getAbsolutePath();
-        pictureLocation = image.getAbsolutePath();
+        //pictureSaveLoc = "file:" + image.getAbsolutePath();
+        pictureSaveLoc = image.getAbsolutePath();
         return image;
     }
 
