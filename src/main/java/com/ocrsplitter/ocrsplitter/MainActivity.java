@@ -191,7 +191,7 @@ public class MainActivity extends AppCompatActivity {
         return lines;
     }
 
-
+    public void getTextData(String filename)
 
 
     protected void goToNextScreen() {
