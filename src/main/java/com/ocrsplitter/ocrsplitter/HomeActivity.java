@@ -79,7 +79,7 @@ public class HomeActivity extends AppCompatActivity {
                         photoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
-                uploadFile();
+                //uploadFile();
             }
         }
     }

@@ -209,7 +209,7 @@ public class MainActivity extends AppCompatActivity {
 
         reader.close();
 
-        JsonArray<JsonObject> text_data = data.getJsonArray("textAnnotation");
+        JsonArray text_data = data.getJsonArray("textAnnotation");
 
         ArrayList<JsonObject> words = new ArrayList();
 
@@ -270,10 +270,18 @@ public class MainActivity extends AppCompatActivity {
         }
         return lines;
     }
-     */
 
-    public void getTextData(String filename) {
 
+    public void getTextData(String s) {
+        ArrayList<JsonObject> jtext = selectLines(extractItems(s));
+        String [] money_vals = {".0", ".1", ".2", ".3", ".4", ".5", ".6", ".7", ".8", ".9"};
+        String stext [][] = new String[jtext.size()][jtext[0].size()];
+
+        for(ArrayList ar_list : jtext) {
+            for(JsonObject js_obj : ar_list) {
+
+            }
+        }
     }
 
 
