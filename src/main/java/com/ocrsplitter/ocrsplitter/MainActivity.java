@@ -21,6 +21,8 @@ import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonValue;
 
+import Math.abs;
+
 public class MainActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
@@ -119,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    protected void extractItems(String s) {
+    protected ArrayList extractItems(String s) {
 
         JsonReader reader = Json.createReader(new StringReader(s));
 
@@ -137,6 +139,59 @@ public class MainActivity extends AppCompatActivity {
 
         return words;
     }
+
+    protected ArrayList selectLines(ArrayList<JsonObject> words) {
+        ArrayList lines;
+        ArrayList current_line;
+
+        ArrayList words_done;
+
+        int current_line_y = 0;
+
+        for (JsonObject primary_word : words) {
+
+            boolean exclude = false;
+            for (JsonObject check_word : words_done) {
+                if (primary_word == check_word) {
+                    exclude = true;
+                    break;
+                }
+            }
+            if (!exclude) {
+                exclude = false;
+
+                current_line.add(primary_word)
+                words_done.add(primary_word)
+
+                JsonArray vertexes = word.getJsonObject("boudingPoly").getJsonArray("vertices");
+
+                current_line_y = vertexes.get(0).getInt("y");
+                int current_line_height = vertexes.get(0).getInt("y") - vertexes.get(2).getInt("y");
+
+                for (JsonObject secondary_word : words) {
+                    for (JsonObject check_word : words_done) {
+                        if (secondary_word == check_word) {
+                            exclude = true;
+                        }
+                    }
+
+                    if (!exclude) {
+                        exclude = false;
+                        current_word_y = secondary_word.getJsonObject("boundingPoly").getJsonArray("vertices").get(0).getInt("y");
+                        if (Math.abs(current_word_y - current_line_y) <= current_line_height) {
+                            current_line.add(secondary_word);
+                            words_done.add(secondary_word);
+                        }
+                    }
+                }
+                lines.add(current_line);
+                current_line = [];
+            }
+        }
+        return lines;
+    }
+
+
 
 
     protected void goToNextScreen() {
