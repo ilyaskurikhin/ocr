@@ -71,6 +71,7 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
+
     private File createImageFile() throws IOException {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
@@ -86,5 +87,16 @@ public class HomeActivity extends AppCompatActivity {
         // Save a file: path for use with ACTION_VIEW intents
         pictureSaveLoc = "file:" + image.getAbsolutePath();
         return image;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_TAKE_PHOTO) {
+            Intent goToNextScreen = new Intent(getApplicationContext(), ChargeActivity.class);
+            startActivity(goToNextScreen);
+        }
     }
 }

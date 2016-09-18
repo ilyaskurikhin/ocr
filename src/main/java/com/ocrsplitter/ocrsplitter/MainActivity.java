@@ -1,5 +1,6 @@
 package com.ocrsplitter.ocrsplitter;
 
+import android.annotation.TargetApi;
 import android.content.Intent;
 import android.graphics.Color;
 import android.support.annotation.NonNull;
@@ -10,6 +11,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.Manifest;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -31,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
     TextView errorNameET;
     TextView errorPasswordET;
 
+    @TargetApi(24)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -80,6 +83,8 @@ public class MainActivity extends AppCompatActivity {
                 register();
             }
         });
+
+        requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 5);
     }
 
     @Override
