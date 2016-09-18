@@ -97,7 +97,7 @@ public class ChargeActivity extends AppCompatActivity {
                         String contactNumber = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
                         String given = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
                         phones.close();
-                        
+
                         String name = given;
 
                         ReceiptItem item = items.get(column);
