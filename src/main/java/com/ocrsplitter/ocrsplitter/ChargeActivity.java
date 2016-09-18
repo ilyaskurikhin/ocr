@@ -230,7 +230,7 @@ public class ChargeActivity extends AppCompatActivity {
                         annotateImageRequest.setFeatures(new ArrayList<Feature>() {{
                             Feature labelDetection = new Feature();
                             labelDetection.setType("TEXT_DETECTION");
-                            labelDetection.setMaxResults(10);
+                            labelDetection.setMaxResults(100);
                             add(labelDetection);
                         }});
 
