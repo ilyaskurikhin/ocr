@@ -104,6 +104,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 5);
+        requestPermissions(new String[]{Manifest.permission.SEND_SMS}, 6);
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
@@ -199,138 +200,6 @@ public class MainActivity extends AppCompatActivity {
                         // ...
                     }
                 });
-    }
-
-
-    protected ArrayList<JsonObject> extractItems(String s) {
-
-        JsonReader reader = Json.createReader(new StringReader(s));
-
-        JsonObject data = reader.readObject();
-
-        reader.close();
-
-        JsonArray text_data = data.getJsonArray("textAnnotation");
-
-        ArrayList<JsonObject> words = new ArrayList();
-
-        for (int i=0; i < text_data.length(); ++i) {
-            words.add(text_data.get(i));
-        }
-
-        return words;
-    }
-
-    protected ArrayList<ArrayList<JsonObject>> selectLines(ArrayList<JsonObject> words) {
-        ArrayList<ArrayList<JsonObject>> lines = new ArrayList();
-        ArrayList<JsonObject> current_line = new ArrayList();
-
-        ArrayList<JsonObject> words_done;
-
-        int current_line_y = 0;
-
-        for (JsonObject primary_word : words) {
-
-            // TODO: optimize stacking, use array iterators ?
-            boolean exclude = false;
-            for (JsonObject check_word : words_done) {
-                if (primary_word == check_word) {
-                    exclude = true;
-                    break;
-                }
-            }
-            if (!exclude) {
-                exclude = false;
-
-                current_line.add(primary_word);
-                words_done.add(primary_word);
-
-                JsonArray vertexes = word.getJsonObject("boudingPoly").getJsonArray("vertices");
-
-                current_line_y = vertexes.get(0).getInt("y");
-                int current_line_height = vertexes.get(0).getInt("y") - vertexes.get(2).getInt("y");
-
-                // TODO: optimize again, using iterators
-                for (JsonObject secondary_word : words) {
-                    for (JsonObject check_word : words_done) {
-                        if (secondary_word == check_word) {
-                            exclude = true;
-                        }
-                    }
-
-                    if (!exclude) {
-                        exclude = false;
-                        current_word_y = secondary_word.getJsonObject("boundingPoly").getJsonArray("vertices").get(0).getInt("y");
-                        if (Math.abs(current_word_y - current_line_y) <= current_line_height) {
-                            current_line.add(secondary_word);
-                            words_done.add(secondary_word);
-                        }
-                    }
-                }
-                lines.add(current_line);
-                current_line.clear();
-            }
-        }
-        return lines;
-    }
-
-
-    public void getTextData(String s) {
-        // TODO: implement full tokenization
-        ArrayList<JsonObject> jtext = selectLines(extractItems(s));
-        String [] money_vals = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."};
-        String stext [][] = new String[jtext.size()][jtext[0].size()];
-
-
-        for(ArrayList ar_list : jtext) {
-            for(JsonObject js_obj : ar_list) {
-
-            }
-        }
-    }
-
-    protected ArrayList<ArrayList<String>> extractElements(ArrayList<ArrayList<String>> lines) {
-        ArrayList<ArrayList<String>> prices = new ArrayList();
-
-        for (ArrayList<String> line : lines) {
-
-            boolean is_price = true;
-            for (String word : line) {
-
-                // store consecutive chars here
-                ArrayList chars = new ArrayList();
-
-                // find consecutive matches
-                int match = 0;
-                for (c:
-                     stext) {
-                    if (money_vals.contains(c)) {
-                        match += 1;
-                        chars.add(c);
-                    } else {
-                        match = 0;
-                    }
-                }
-                if (match == 0) {
-                    // NaN
-                    break;
-                } else {
-                    int num_decimals = 0;
-                    for (c : chars) {
-                        if (c == '.') {
-                            num_decimals += 1;
-                        }
-                    }
-                    if (num_decimals != 1) {
-                        // Not a decimal number
-                        break;
-                    }
-                }
-
-                // if we are still in loop, string is a decimal number
-                prices.add(line);
-            }
-        }
     }
 
 

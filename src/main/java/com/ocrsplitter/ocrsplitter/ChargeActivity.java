@@ -13,6 +13,7 @@ import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
+import android.telephony.SmsManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -39,10 +40,17 @@ import com.google.api.services.vision.v1.model.Image;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.JsonValue;
 
 // Much taken from https://developer.android.com/training/camera/photobasics.html#TaskPhotoView
 public class ChargeActivity extends AppCompatActivity {
@@ -64,7 +72,7 @@ public class ChargeActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        uploadImage(Uri.fromFile(new File(HomeActivity.pictureSaveLoc)));
+        String data = uploadImage(Uri.fromFile(new File(HomeActivity.pictureSaveLoc)));
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.charge_activity);
@@ -72,6 +80,37 @@ public class ChargeActivity extends AppCompatActivity {
         chargeList = (ListView) findViewById(R.id.chargeListView);
         cancelButton = (Button) findViewById(R.id.cancelButton);
         okButton = (Button) findViewById(R.id.okButton);
+
+        okButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ArrayList<String> phones = new ArrayList<String>();
+                ArrayList<String> names = new ArrayList<String>();
+                ArrayList<Double> costs = new ArrayList<Double>();
+                ArrayList<ArrayList<String>> userItems = new ArrayList<ArrayList<String>>();
+
+                // Go through and add up the receipts for each user
+                for (ReceiptItem item : items) {
+                    if (! item.isPaid()) {
+                        int index = phones.indexOf(item.getPhoneNumber());
+                        if (index < 0) {
+                            phones.add(item.getPhoneNumber());
+                            names.add(item.getOwnersName());
+                            costs.add(item.getPrice());
+
+                            userItems.add(new ArrayList<String>());
+                            userItems.get(userItems.size() - 1).add(item.getName());
+                        }
+                        else {
+                            costs.set(index, costs.get(index) + item.getPrice());
+                            userItems.get(index).add(item.getName());
+                        }
+                    }
+                }
+
+                chargeUsers(phones, names, costs, userItems);
+            }
+        });
 
         items = getReceiptItems("Dur dur dur");
 
@@ -85,14 +124,175 @@ public class ChargeActivity extends AppCompatActivity {
         chargeList.setOnItemLongClickListener(itemLongClickedListener);
     }
 
-    protected ArrayList<ReceiptItem> getReceiptItems(String fileLoc) {
+    protected ArrayList<JsonValue> extractItems(String s) {
 
+        JsonReader reader = Json.createReader(new StringReader(s));
+
+        JsonObject data = reader.readObject();
+
+        reader.close();
+
+        JsonArray text_data = data.getJsonArray("textAnnotation");
+
+        ArrayList<JsonValue> words = new ArrayList();
+
+        for (int i=0; i < text_data.size(); ++i) {
+            words.add(text_data.get(i));
+        }
+
+        return words;
+    }
+
+    protected ArrayList<ArrayList<JsonValue>> selectLines(ArrayList<JsonValue> words) {
+        ArrayList<ArrayList<JsonValue>> lines = new ArrayList();
+        ArrayList<JsonValue> current_line = new ArrayList();
+
+        ArrayList<JsonValue> words_done = new ArrayList();
+
+        int current_line_y = 0;
+
+        for (JsonValue primary_word : words) {
+            
+            // TODO: optimize stacking, use array iterators?
+            boolean exclude = false;
+            for (JsonValue check_word : words_done) {
+                if (primary_word == check_word) {
+                    exclude = true;
+                    break;
+                }
+            }
+            if (!exclude) {
+                exclude = false;
+
+                current_line.add(primary_word);
+                words_done.add(primary_word);
+
+                JsonArray vertexes = ((JsonObject)primary_word).getJsonObject("boudingPoly").getJsonArray("vertices");
+
+                current_line_y = vertexes.getJsonObject(0).getInt("y");
+                int current_line_height = vertexes.getJsonObject(0).getInt("y") - vertexes.getJsonObject(2).getInt("y");
+                
+                // TODO: optimize again, use iterators
+                for (JsonValue secondary_word : words) {
+                    for (JsonValue check_word : words_done) {
+                        if (secondary_word == check_word) {
+                            exclude = true;
+                        }
+                    }
+
+                    if (!exclude) {
+                        exclude = false;
+                        int current_word_y = ((JsonObject)secondary_word).getJsonObject("boundingPoly").getJsonArray("vertices").getJsonObject(0).getInt("y");
+                        if (Math.abs(current_word_y - current_line_y) <= current_line_height) {
+                            current_line.add(secondary_word);
+                            words_done.add(secondary_word);
+                        }
+                    }
+                }
+                lines.add(current_line);
+                current_line.clear();
+            }
+        }
+        return lines;
+    }
+
+
+    public ArrayList<ArrayList<String>> getTextData(String s) {
+        ArrayList<ArrayList<JsonValue>> jtext = selectLines(extractItems(s));
+        String [] money_vals = {".0", ".1", ".2", ".3", ".4", ".5", ".6", ".7", ".8", ".9"};
+        ArrayList<ArrayList<String>> stext = new ArrayList();
+
+
+        ArrayList<ArrayList<String>> items = new ArrayList();
+
+        for(ArrayList<JsonValue> ar_list1 : jtext){
+            ArrayList<String> tempitems = new ArrayList();
+            for(JsonValue text_object : ar_list1) {
+                String text = ((JsonObject)text_object).getString("description");
+                tempitems.add(text);
+            }
+            stext.add(tempitems);
+        }
+
+        //Now check to see if they have dollar values
+        for(ArrayList<String> slist: stext){
+            for(String component: slist){
+                for(String m_vals: money_vals){
+                    if (component.contains(m_vals)){
+                        items.add(slist);
+                    }
+                }
+            }
+
+        }
+
+        return items;
+    }
+
+    protected ArrayList<ArrayList<String>> extractElements(ArrayList<ArrayList<String>> lines) {
+        ArrayList<ArrayList<String>> prices = new ArrayList();
+
+        for (ArrayList<String> line : lines) {
+
+            boolean is_price = true;
+            for (String word : line) {
+
+                // store consecutive chars here
+                ArrayList chars = new ArrayList();
+
+                // find consecutive matches
+                int match = 0;
+                for (c:
+                     stext) {
+                    if (money_vals.contains(c)) {
+                        match += 1;
+                        chars.add(c);
+                    } else {
+                        match = 0;
+                    }
+                }
+                if (match == 0) {
+                    // NaN
+                    break;
+                } else {
+                    int num_decimals = 0;
+                    for (c : chars) {
+                        if (c == '.') {
+                            num_decimals += 1;
+                        }
+                    }
+                    if (num_decimals != 1) {
+                        // Not a decimal number
+                        break;
+                    }
+                }
+
+                // if we are still in loop, string is a decimal number
+                prices.add(line);
+            }
+        }
+    }
+
+
+    protected ArrayList<ReceiptItem> getReceiptItems(String s) {
+
+        ArrayList<ArrayList<String>> lines = getTextData(s);
         ArrayList<ReceiptItem> items = new ArrayList<>();
 
+        for (ArrayList<String> line : lines) {
+            String name = new String("");
+            for (int i=0; i < line.size() - 1; ++i) {
+                name += line.get(i) + " ";
+            }
+            ReceiptItem item = new ReceiptItem(name,Double.parseDouble(line.get(line.size()-1)));
+            items.add(item);
+        }
+
+        /*
         items.add(new ReceiptItem("Item 1", 12.43));
         items.add(new ReceiptItem("Item 2", 42.13));
         items.add(new ReceiptItem("Item 3", 22.22));
-
+        */
         return items;
     }
 
@@ -119,6 +319,7 @@ public class ChargeActivity extends AppCompatActivity {
                         phones.moveToFirst();
                         String contactNumber = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
                         String given = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+                        String email = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DATA));
                         phones.close();
 
                         String name = given;
@@ -165,6 +366,31 @@ public class ChargeActivity extends AppCompatActivity {
         }
     };
 
+    private void chargeUsers(ArrayList<String> phones, ArrayList<String> names, ArrayList<Double>  costs, ArrayList<ArrayList<String>> userItems) {
+        for (int i = 0; i < phones.size(); i++) {
+            String description = "";
+            for (int k = 0; k < userItems.get(i).size(); k++) {
+                description += userItems.get(i).get(k);
+                if (k < userItems.size() - 1) {
+                    description += ", ";
+                }
+                else {
+                    description += ".";
+                }
+            }
+            chargeUser(phones.get(i), names.get(i), costs.get(i), description);
+        }
+    }
+
+    private void chargeUser(String phone, String name, Double cost, String note) {
+        System.out.println("Charging " + phone + " .Name " + name + " .Cost " + cost + " .Note " + note);
+        SmsManager smsManager = SmsManager.getDefault();
+        smsManager.sendTextMessage(phone, null, "Hey " + name + ", you owe " + cost + " from these items: " + note, null, null);
+
+        Intent goToNextScreen = new Intent(getApplicationContext(), HomeActivity.class);
+        startActivity(goToNextScreen);
+    }
+
     //////////////////////////////////////////////////////////////////////////
 
     private static final String CLOUD_VISION_API_KEY = KeyClass.key;
@@ -175,7 +401,7 @@ public class ChargeActivity extends AppCompatActivity {
     public static final int CAMERA_PERMISSIONS_REQUEST = 2;
     public static final int CAMERA_IMAGE_REQUEST = 3;
 
-    public void uploadImage(Uri uri) {
+    public String uploadImage(Uri uri) {
         FILE_NAME = HomeActivity.pictureName;
         if (uri != null) {
             try {
@@ -186,7 +412,7 @@ public class ChargeActivity extends AppCompatActivity {
                                 MediaStore.Images.Media.getBitmap(getContentResolver(), uri),
                                 1200);
 
-                callCloudVision(bitmap);
+                return callCloudVision(bitmap);
 
             } catch (IOException e) {
                 System.out.println("Fail: " + e.getMessage());
@@ -194,9 +420,10 @@ public class ChargeActivity extends AppCompatActivity {
         } else {
             System.out.println( "Image picker gave us a null image.");
         }
+        return "fail";
     }
 
-    public void callCloudVision(final Bitmap bitmap) throws IOException {
+    public String callCloudVision(final Bitmap bitmap) throws IOException {
         // Do the real work in an async task, because we need to use the network anyway
         new AsyncTask<Object, Void, String>() {
             @Override
@@ -259,6 +486,7 @@ public class ChargeActivity extends AppCompatActivity {
                 return "Cloud Vision API request failed. Check logs for details.";
             }
         }.execute();
+        return "failed";
     }
 
     public Bitmap scaleBitmapDown(Bitmap bitmap, int maxDimension) {
