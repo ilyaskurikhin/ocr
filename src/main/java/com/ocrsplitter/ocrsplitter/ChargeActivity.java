@@ -195,7 +195,7 @@ public class ChargeActivity extends AppCompatActivity {
         }
     }
 
-    private void callCloudVision(final Bitmap bitmap) throws IOException {
+    public void callCloudVision(final Bitmap bitmap) throws IOException {
         // Do the real work in an async task, because we need to use the network anyway
         new AsyncTask<Object, Void, String>() {
             @Override
