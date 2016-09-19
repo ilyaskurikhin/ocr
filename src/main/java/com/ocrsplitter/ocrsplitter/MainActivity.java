@@ -201,7 +201,7 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    /**
+
     protected ArrayList<JsonObject> extractItems(String s) {
 
         JsonReader reader = Json.createReader(new StringReader(s));
@@ -231,6 +231,7 @@ public class MainActivity extends AppCompatActivity {
 
         for (JsonObject primary_word : words) {
 
+            // TODO: optimize stacking, use array iterators ?
             boolean exclude = false;
             for (JsonObject check_word : words_done) {
                 if (primary_word == check_word) {
@@ -249,6 +250,7 @@ public class MainActivity extends AppCompatActivity {
                 current_line_y = vertexes.get(0).getInt("y");
                 int current_line_height = vertexes.get(0).getInt("y") - vertexes.get(2).getInt("y");
 
+                // TODO: optimize again, using iterators
                 for (JsonObject secondary_word : words) {
                     for (JsonObject check_word : words_done) {
                         if (secondary_word == check_word) {
@@ -274,13 +276,59 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void getTextData(String s) {
+        // TODO: implement full tokenization
         ArrayList<JsonObject> jtext = selectLines(extractItems(s));
-        String [] money_vals = {".0", ".1", ".2", ".3", ".4", ".5", ".6", ".7", ".8", ".9"};
+        String [] money_vals = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."};
         String stext [][] = new String[jtext.size()][jtext[0].size()];
+
 
         for(ArrayList ar_list : jtext) {
             for(JsonObject js_obj : ar_list) {
 
+            }
+        }
+    }
+
+    protected ArrayList<ArrayList<String>> extractElements(ArrayList<ArrayList<String>> lines) {
+        ArrayList<ArrayList<String>> prices = new ArrayList();
+
+        for (ArrayList<String> line : lines) {
+
+            boolean is_price = true;
+            for (String word : line) {
+
+                // store consecutive chars here
+                ArrayList chars = new ArrayList();
+
+                // find consecutive matches
+                int match = 0;
+                for (c:
+                     stext) {
+                    if (money_vals.contains(c)) {
+                        match += 1;
+                        chars.add(c);
+                    } else {
+                        match = 0;
+                    }
+                }
+                if (match == 0) {
+                    // NaN
+                    break;
+                } else {
+                    int num_decimals = 0;
+                    for (c : chars) {
+                        if (c == '.') {
+                            num_decimals += 1;
+                        }
+                    }
+                    if (num_decimals != 1) {
+                        // Not a decimal number
+                        break;
+                    }
+                }
+
+                // if we are still in loop, string is a decimal number
+                prices.add(line);
             }
         }
     }
